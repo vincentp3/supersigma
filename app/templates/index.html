@@ -1,0 +1,211 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  </head>
+  <body style="margin:20px;">
+  <h1>
+    SigmaForAll
+  </h1>
+  <hr>
+<div class="row">
+<div class="col-3" style="margin-top:20px; width:100%">
+
+<div class="input-group mb-3">
+  <button id="button-input" class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Logsource/product</button>
+  <ul id="dropdown-menu" class="dropdown-menu">
+    <li><a class="dropdown-item" onclick="change2Detection('fieldName')">Detection/fieldName</a></li>
+    <li><a class="dropdown-item" onclick="change2Detection('value')">Detection/value</a></li>
+    <li><a class="dropdown-item" onclick="change2LogSource('category')">LogSource/category</a></li>
+    <li><a class="dropdown-item" onclick="change2LogSource('product')">LogSource/product</a></li>
+    <li><a class="dropdown-item" onclick="change2LogSource('service')">LogSource/service</a></li>
+  </ul>
+  
+  <input type="text" class="form-control" id="boxinput" aria-describedby="basic-addon3">
+  
+</div>
+
+<div id="message" ></div>
+</div>
+<div class="col-9">
+  <div  id="code-example">
+    
+  </div>
+</div>
+</div>
+<style>
+  #message{
+    width:100%; border-radius:20px; box-shadow:0 4px 10px rgba(32,33,36,.28);
+    max-height:70vh;
+    overflow:auto;
+  }
+  .icon-prop{
+    display:flex;
+    margin-right:10px;
+  }
+  .text-prop{
+    display:flex;
+  }
+  .proposition{
+    display:flex;
+    padding-left:60px;
+    cursor:default;
+    
+  }
+  .proposition:hover {
+    background:#dedede;
+  }
+
+  .yml-tiret{
+    color:#ac1b1b;
+    font-weight: bold;
+  }
+  #code-example{
+    margin-top:20px;
+    border-radius:10px;
+    box-shadow:0 4px 10px rgba(32,33,36,.28);
+    padding:20px;
+    overflow:auto;
+  }
+</style>
+<script>document.getElementById("code-example").style.display = 'none';</script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+  <script>
+// Var gloables
+var source = "logsources"
+var column = "product"
+
+    $("#boxinput").keyup(function(event) {
+    if (event.keyCode === 13) {
+        document.getElementById("message").innerHTML = ""
+        launchRequest()
+        }
+});
+
+function change2LogSource(subField){
+  console.log("call to source")
+  document.getElementById("button-input").innerHTML = "Logsource"+"/"+subField;
+  source = "logsources"
+  column = subField
+  document.getElementById("message").innerHTML = ""
+  launchRequest("GET",document.getElementById("boxinput").value )
+  launchRequest()
+  }
+function launchRequest(){
+  value = document.getElementById("boxinput").value
+  if (value != ""){
+    makeRequest("GET", "http://"+document.domain+"/search?question="+value+"&source="+source+"&column="+column);
+  }
+}
+function change2Detection(subField){
+  console.log("call to detection")
+  document.getElementById("button-input").innerHTML = "Detection"+"/"+subField;
+  column = subField
+  source = "selections"
+  document.getElementById("message").innerHTML = ""
+  launchRequest()
+  }
+$("#boxinput").keyup(function(event) {
+    if (event.keyCode != 13) {
+      if ($("#boxinput").val() != ""){
+        launchRequest();
+        }
+    }
+});
+
+var result_search;
+
+function hello(){
+  alert("hello");
+}
+
+function renderJSON(obj) {
+    console.log("ICI : ",obj);
+    //&nbsp
+    //<span class='yml-tiret'>-&nbsp</span>
+    res = obj
+    res = res.replace(/(\s)/g, "&nbsp")
+    res = res.replace(/&nbsp(-)/g, "<span class='yml-tiret'>-</span>")
+    
+    res = res.replace(/(?:\r\n|\r|\\n)/g, '<br>')
+
+
+    return res;
+    
+    
+}
+
+function displayDocument(doc){
+  console.log("displayDocument ", doc)
+  makeRequestDocument("GET","http://"+document.domain+"/getDoc?doc="+doc);
+  document.getElementById("code-example").style.display = 'block'; 
+}
+function makeRequest(method, url) {
+    return new Promise(function (resolve, reject) {
+        let xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.onload = function () {
+            if (this.status >= 200 && this.status < 300) {
+
+                console.log(xhr.response);
+                var res = JSON.parse(xhr.response);
+                result_search = res
+                res_final="<ul style='list-style-type: none;padding-top:20px;padding-left:0px; width:100%;'>";
+                var arrayLength = res.length;
+                for (var i = 0; i < arrayLength; i++) {
+                  res_final += "<li onclick=displayDocument('"+res[i][1]+"') class='proposition'><div class='icon-prop'><img src='/static/search.svg'></div><div class='text-prop'>"+res[i][0]+"</div></li>";
+                }
+                res_final+="</ul>"
+                console.log("Res", res);
+                document.getElementById("message").innerHTML = res_final;
+            } else {
+                reject({
+                    status: this.status,
+                    statusText: xhr.statusText
+                });
+            }
+        };
+        xhr.onerror = function () {
+            reject({
+                status: this.status,
+                statusText: xhr.statusText
+            });
+        };
+        xhr.send();
+    });
+}
+
+function makeRequestDocument(method, url) {
+    return new Promise(function (resolve, reject) {
+        let xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.onload = function () {
+            if (this.status >= 200 && this.status < 300) {
+
+                console.log(xhr.response);
+                res = xhr.response
+                res = res.substring(1, res.length - 2)
+                res = renderJSON(res)
+                
+                document.getElementById("code-example").innerHTML = res;
+            } else {
+                reject({
+                    status: this.status,
+                    statusText: xhr.statusText
+                });
+            }
+        };
+        xhr.onerror = function () {
+            reject({
+                status: this.status,
+                statusText: xhr.statusText
+            });
+        };
+        xhr.send();
+    });
+}
+</script>
+
+</body>
+<html>
