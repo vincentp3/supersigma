@@ -9,5 +9,4 @@ typing_extensions==4.0.0
 Werkzeug==2.0.2
 zipp==3.6.0
 PyYAML==6.0
-psycopg2==2.9.2 
 flask_ngrok==0.0.25
